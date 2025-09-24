@@ -1,0 +1,17 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: self-obs-grafana
+  namespace: open-cluster-management-observability
+spec:
+  host: "grafana-central.apps.mcs-p-gs-acm-01.main.glb.corp.local" 
+  to:
+    kind: Service
+    name: self-obs-grafana
+    weight: 100
+  port:
+    targetPort: oauth-proxy
+  tls:
+    termination: reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

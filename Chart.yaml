@@ -1,0 +1,17 @@
+apiVersion: v2
+name: self-obs
+description: A helm chart used for the deployment of the self grafana stack through the openshift-gitops operator.
+type: application
+version: 0.1.0
+
+maintainers:
+  - name: Oihan ITHURRITZE
+    email: oihan.ithurritze@external.totalenergies.com
+
+dependencies:
+- name: grafana
+  version: 10.0.0
+  repository: https://grafana.github.io/helm-charts/
+- name: postgresql
+  version: 16.7.27
+  repository: https://charts.bitnami.com/bitnami/

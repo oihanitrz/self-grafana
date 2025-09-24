@@ -1,0 +1,8 @@
+kind: OAuthClient
+apiVersion: oauth.openshift.io/v1
+metadata:
+  name: self-obs-proxy-client
+secret: self-obs-proxy-client
+redirectURIs:
+  - 'https://grafana-central.apps.mcs-p-gs-acm-01.main.glb.corp.local'
+grantMethod: auto

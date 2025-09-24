@@ -1,0 +1,101 @@
+postgresql:
+  global:
+    postgresql:
+      auth:
+        existingSecret: self-obs-postgresql-auth
+        secretKeys:
+          adminPasswordKey: adminPass
+          userPasswordKey: userPass
+          replicationPasswordKey: replicationPass
+        database: "self-obs"
+        username: "grafana"
+grafana:
+  envFromSecret: "self-obs-postgresql-auth"
+  createConfigmap: false
+  assertNoLeakedSecrets: false
+  image:
+    registry: quay.io
+    repository: stolostron/grafana
+    sha: fd89bd2b186b02b5d044f0b211637c5d43b2209f6632e684dc54c8787c44dad2
+    tag: ""
+  adminUser: ""
+  adminPassword: ""
+  admin:
+    existingSecret: ""
+  sidecar:
+    dashboards:
+      enabled: false
+      logLevel: DEBUG
+      searchNamespace: ALL
+      skipReload: false
+      folder: /var/lib/grafana/sc-dashboard
+      label: observability.open-cluster-management.io/dashboard-cm
+      folderAnnotation: observability.open-cluster-management.io/dashboard-folder
+    datasources:
+      enabled: false
+      searchNamespace: ALL
+  initChownData:
+    enabled: false
+  rbac:
+    pspEnabled: false
+  securityContext:
+    securityContext:
+    runAsNonRoot: true
+    runAsUser: null
+    runAsGroup: null
+    fsGroup: null
+  service:
+    annotations:
+      service.beta.openshift.io/serving-cert-secret-name: self-obs-tls
+  replicas: 1
+  extraContainers: |
+    - name: oauth-proxy
+      image: quay.io/openshift/origin-oauth-proxy:4.17
+      args:
+        - '--provider=openshift'
+        - '--upstream=http://localhost:3000'
+        - '--https-address=:9443'
+        - '--cookie-secret-file=/etc/proxy/secrets/session_secret'
+        - '--cookie-expire=12h0m0s'
+        - '--cookie-refresh=8h0m0s'
+        - '--openshift-delegate-urls={"/": {"resource": "projects", "verb": "list"}}'
+        - '--tls-cert=/etc/tls/private/tls.crt'
+        - '--tls-key=/etc/tls/private/tls.key'
+        - '--openshift-service-account=self-obs-grafana'
+        - '--pass-user-bearer-token=true'
+        - '--pass-access-token=true'
+        - '--client-id=self-obs-proxy-client'
+        - '--client-secret=self-obs-proxy-client'
+        - '--scope=user:full'
+        - '--openshift-ca=/etc/pki/tls/cert.pem'
+        - '--openshift-ca=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
+      volumeMounts:
+        - name: tls-secret
+          mountPath: /etc/tls/private
+        - name: cookie-secret
+          mountPath: /etc/proxy/secrets
+  extraContainerVolumes:
+    - name: tls-secret
+      secret:
+        secretName: self-obs-tls
+        defaultMode: 420
+    - name: cookie-secret
+      secret:
+        secretName: rbac-proxy-cookie-secret
+        defaultMode: 420
+  extraVolumeMounts:
+    - name: config
+      mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+      subPath: datasources.yaml
+      readOnly: true
+  extraExposePorts:
+    - name: oauth-proxy
+      port: 9443
+      targetPort: 9443
+  persistence:
+    enabled: false
+  env:
+    SQLITE_TMPDIR: /var/lib/grafana
+    GF_DATABASE_PASSWORD: "$(userPass)"
+  args:
+    - '-config=/etc/grafana/grafana.ini'

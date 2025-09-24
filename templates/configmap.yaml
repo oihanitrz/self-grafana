@@ -1,0 +1,79 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: self-obs-grafana
+  namespace: open-cluster-management-observability
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+    - access: proxy
+      isDefault: true
+      jsonData:
+        customQueryParameters: max_source_resolution=auto
+        forwardHeaders:
+        - X-Forwarded-Access-Token
+        timeInterval: 30s
+        timeout: "300"
+      name: Observatorium
+      type: prometheus
+      url: http://rbac-query-proxy.open-cluster-management-observability.svc.cluster.local:8080
+    - access: proxy
+      jsonData:
+        customQueryParameters: max_source_resolution=auto
+        forwardHeaders:
+        - X-Forwarded-Access-Token
+        oauthPassThru: true
+        timeInterval: 300s
+        timeout: "300"
+      name: Observatorium-Dynamic
+      type: prometheus
+      url: http://rbac-query-proxy.open-cluster-management-observability.svc.cluster.local:8080
+  grafana.ini: |
+    [analytics]
+    check_for_updates = true
+    [auth]
+    disable_login_form = true
+    disable_signout_menu = true
+    [auth.basic]
+    enabled = false
+    [auth.proxy]
+    auto_sign_up = false
+    enabled = true
+    header_name = X-Forwarded-User
+    [dataproxy]
+    dial_timeout = 30
+    keep_alive_seconds = 300
+    logging = true
+    timeout = 300
+    [feature_toggles]
+    correlations = false
+    [grafana_net]
+    url = https://grafana.net
+    [log]
+    level = debug
+    mode = console
+    [paths]
+    data = /var/lib/grafana
+    logs = /var/lib/grafana/logs
+    plugins = /var/lib/grafana/plugins
+    provisioning = /etc/grafana/provisioning
+    [public_dashboards]
+    enabled = false
+    [security]
+    admin_user = kube:admin
+    cookie_secure = true
+    [server]
+    domain = grafana-central.apps.mcs-p-gs-acm-01.main.glb.corp.local
+    http_port = 3000
+    root_url = https://grafana-central.apps.mcs-p-gs-acm-01.main.glb.corp.local
+    [unified_alerting]
+    enabled = false
+    [users]
+    viewers_can_edit = false
+    [database]
+    host = self-obs-postgresql.open-cluster-management-observability.svc:5432
+    name = self-obs
+    ssl_mode = disable
+    type = postgres
+    user = grafana
