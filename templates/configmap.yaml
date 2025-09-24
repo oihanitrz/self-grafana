@@ -64,9 +64,9 @@ data:
     admin_user = kube:admin
     cookie_secure = true
     [server]
-    domain = grafana-central.apps.mcs-p-gs-acm-01.main.glb.corp.local
+    domain = grafana-central.{{ .Values.domain }}
     http_port = 3000
-    root_url = https://grafana-central.apps.mcs-p-gs-acm-01.main.glb.corp.local
+    root_url = https://grafana-central.{{ .Values.domain }}
     [unified_alerting]
     enabled = false
     [users]
